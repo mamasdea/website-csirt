@@ -258,127 +258,68 @@
 
 @push('js')
     <script>
-        let editorInstance = null;
+        let ckeditorInstance = null;
 
-        // Initialize CKEditor
-        function initializeCKEditor() {
-            const contentElement = document.querySelector('#content');
+        function createCKEditor() {
+            if (CKEDITOR.instances.content) {
+                CKEDITOR.instances.content.destroy(true);
+            }
 
+            const contentElement = document.getElementById("content");
             if (!contentElement) {
                 console.error('Content element not found');
                 return;
             }
 
-            // Destroy existing instance if any
-            if (editorInstance) {
-                editorInstance.destroy()
-                    .then(() => {
-                        editorInstance = null;
-                        createEditor();
-                    })
-                    .catch(err => console.error('Error destroying editor:', err));
-            } else {
-                createEditor();
+            var options = {
+                filebrowserImageBrowseUrl: '/file-manager/ckeditor',
+            };
+
+            ckeditorInstance = CKEDITOR.replace(contentElement, options);
+            CKEDITOR.config.allowedContent = true;
+            CKEDITOR.config.versionCheck = false;
+
+            // Sync with Livewire on change
+            ckeditorInstance.on('change', function() {
+                @this.set('content', ckeditorInstance.getData());
+            });
+        }
+
+        function destroyCKEditor() {
+            if (ckeditorInstance) {
+                ckeditorInstance.destroy();
+                ckeditorInstance = null;
             }
         }
 
-        function createEditor() {
-            ClassicEditor
-                .create(document.querySelector('#content'), {
-                    toolbar: {
-                        items: [
-                            'heading', '|',
-                            'bold', 'italic', 'link', '|',
-                            'bulletedList', 'numberedList', '|',
-                            'outdent', 'indent', '|',
-                            'blockQuote', 'insertTable', '|',
-                            'undo', 'redo'
-                        ]
-                    },
-                    heading: {
-                        options: [{
-                                model: 'paragraph',
-                                title: 'Paragraph',
-                                class: 'ck-heading_paragraph'
-                            },
-                            {
-                                model: 'heading1',
-                                view: 'h1',
-                                title: 'Heading 1',
-                                class: 'ck-heading_heading1'
-                            },
-                            {
-                                model: 'heading2',
-                                view: 'h2',
-                                title: 'Heading 2',
-                                class: 'ck-heading_heading2'
-                            },
-                            {
-                                model: 'heading3',
-                                view: 'h3',
-                                title: 'Heading 3',
-                                class: 'ck-heading_heading3'
-                            }
-                        ]
-                    },
-                    table: {
-                        contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
-                    },
-                    language: 'en'
-                })
-                .then(editor => {
-                    editorInstance = editor;
-
-                    // Sync content to Livewire
-                    editor.model.document.on('change:data', () => {
-                        @this.set('content', editor.getData(), false);
-                    });
-
-                    console.log('✅ CKEditor initialized successfully');
-                })
-                .catch(error => {
-                    console.error('❌ CKEditor initialization error:', error);
-                });
-        }
-
-        // Initialize when modal is shown
+        // Modal event listeners
         $(document).ready(function() {
             $('#articleModal').on('shown.bs.modal', function() {
-                console.log('📝 Modal shown, initializing CKEditor...');
-                setTimeout(initializeCKEditor, 200);
+                createCKEditor();
             });
 
-            // Clean up when modal is hidden
             $('#articleModal').on('hidden.bs.modal', function() {
-                if (editorInstance) {
-                    editorInstance.destroy()
-                        .then(() => {
-                            editorInstance = null;
-                            console.log('🗑️ CKEditor destroyed');
-                        })
-                        .catch(err => console.error('Error destroying editor:', err));
+                if (ckeditorInstance) {
+                    destroyCKEditor();
                 }
             });
         });
 
         // Livewire event listeners
         document.addEventListener('livewire:init', () => {
-            // Update editor content when editing
             Livewire.on('editor-content-updated', (event) => {
-                console.log('📄 Updating editor content...');
-                setTimeout(() => {
-                    if (editorInstance) {
-                        editorInstance.setData(event.content || '');
-                        console.log('✅ Content updated');
+                // Wait for editor to be initialized
+                const interval = setInterval(() => {
+                    if (ckeditorInstance && ckeditorInstance.status === 'ready') {
+                        ckeditorInstance.setData(event.content || '');
+                        clearInterval(interval);
                     }
-                }, 250);
+                }, 100);
             });
 
-            // Clear editor
             Livewire.on('clear-editor', () => {
-                if (editorInstance) {
-                    editorInstance.setData('');
-                    console.log('🧹 Editor cleared');
+                if (ckeditorInstance) {
+                    ckeditorInstance.setData('');
                 }
             });
         });

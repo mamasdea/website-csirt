@@ -29,6 +29,7 @@
      <script src="{{ asset('template/plugins/select2/js/select2.full.min.js') }}"></script>
 
 
+     <script src="{{ asset('assets/ckeditor/ckeditor.js') }}"></script>
      @livewireScripts
      @stack('js')
      </body>
