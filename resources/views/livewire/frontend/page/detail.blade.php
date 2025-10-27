@@ -21,13 +21,9 @@
     <hr class="my-5 border-accent/1">
 
 
-    @php
-        $imagePath = 'storage/' . $page->image;
-    @endphp
-
-    @if (!empty($page->image) && file_exists(public_path('storage/' . $page->image)))
+    @if (!empty($page->image) && Storage::disk('gcs')->exists($page->image))
         <div class="mb-6 rounded-t-xl overflow-hidden">
-            <img src="{{ asset('storage/' . $page->image) }}" alt="{{ $page->title }}"
+            <img src="{{ Storage::disk('gcs')->url($page->image) }}" alt="{{ $page->title }}"
                 class="w-full max-h-64 md:max-h-96 object-cover opacity-95">
         </div>
     @else

@@ -56,9 +56,9 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     @if ($p->image)
-                                        <img src="{{ asset('storage/' . $p->image) }}" class="rounded mr-2"
-                                            style="width:50px;height:50px;object-fit:cover"
-                                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-secondary rounded mr-2 d-flex align-items-center justify-content-center\' style=\'width:50px;height:50px;min-width:50px;\'><i class=\'fas fa-image text-white\'></i></div><div><div class=\'font-weight-bold\'>{{ $p->title }}</div><div class=\'text-muted small\'>{{ $p->slug }}</div></div>'; ">
+                                        <img src="{{ route('helper.show-picture', ['path' => $p->image]) }}"
+                                            class="rounded mr-2" style="width:50px;height:50px;object-fit:cover"
+                                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-secondary rounded mr-2 d-flex align-items-center justify-content-center\' style=\'width:50px;height:50px;min-width:50px;\'><i class=\'fas fa-image text-white\'></i></div><div><div class=\'font-weight-bold\'>{{ $p->title }}</div><div class=\'text-muted small\'>{{ $p->slug }}</div></div>';">
                                     @else
                                         <div class="bg-secondary rounded mr-2 d-flex align-items-center justify-content-center"
                                             style="width:50px;height:50px;min-width:50px;">
@@ -198,8 +198,8 @@
                                         style="max-height:120px;width:100%;object-fit:cover;">
                                 @elseif(!empty($current_image))
                                     <label class="d-block text-center">Gambar Saat Ini</label>
-                                    <img src="{{ asset('storage/' . $current_image) }}" class="img-thumbnail"
-                                        style="max-height:120px;width:100%;object-fit:cover;"
+                                    <img src="{{ route('helper.show-picture', ['path' => $current_image]) }}"
+                                        class="img-thumbnail" style="max-height:120px;width:100%;object-fit:cover;"
                                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E';">
                                 @else
                                     <label class="d-block text-center">Preview</label>
@@ -288,193 +288,71 @@
 @endpush
 
 @push('js')
+    <script src="{{ asset('assets/ckeditor/ckeditor.js') }}"></script>
     <script>
-        let editorInstance = null;
+        let ckeditorInstance = null;
 
-        function initializeCKEditor() {
-            const contentElement = document.querySelector('#content');
-            if (!contentElement) return;
+        function createCKEditor() {
+            if (CKEDITOR.instances.content) {
+                CKEDITOR.instances.content.destroy(true);
+            }
 
-            if (editorInstance) {
-                editorInstance.destroy().then(() => {
-                    editorInstance = null;
-                    createEditor();
-                });
-            } else {
-                createEditor();
+            const contentElement = document.getElementById("content");
+            if (!contentElement) {
+                console.error('Content element not found');
+                return;
+            }
+
+            var options = {
+                filebrowserImageBrowseUrl: '/file-manager/ckeditor',
+            };
+
+            ckeditorInstance = CKEDITOR.replace(contentElement, options);
+            CKEDITOR.config.allowedContent = true;
+            CKEDITOR.config.versionCheck = false;
+
+            // Sync with Livewire on change
+            ckeditorInstance.on('change', function() {
+                @this.set('content', ckeditorInstance.getData());
+            });
+        }
+
+        function destroyCKEditor() {
+            if (ckeditorInstance) {
+                ckeditorInstance.destroy();
+                ckeditorInstance = null;
             }
         }
 
-        function createEditor() {
-            class MyUploadAdapter {
-                constructor(loader) {
-                    this.loader = loader;
-                }
-
-                upload() {
-                    return this.loader.file
-                        .then(file => new Promise((resolve, reject) => {
-                            this._initRequest();
-                            this._initListeners(resolve, reject, file);
-                            this._sendRequest(file);
-                        }));
-                }
-
-                abort() {
-                    if (this.xhr) {
-                        this.xhr.abort();
-                    }
-                }
-
-                _initRequest() {
-                    const xhr = this.xhr = new XMLHttpRequest();
-                    xhr.open('POST', '{{ route('upload-image') }}', true);
-                    xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute(
-                        'content'));
-                    xhr.responseType = 'json';
-                }
-
-                _initListeners(resolve, reject, file) {
-                    const xhr = this.xhr;
-                    const loader = this.loader;
-                    const genericErrorText = `Couldn't upload file: ${ file.name }.`;
-
-                    xhr.addEventListener('error', () => reject(genericErrorText));
-                    xhr.addEventListener('abort', () => reject());
-                    xhr.addEventListener('load', () => {
-                        const response = xhr.response;
-
-                        if (!response || response.error) {
-                            return reject(response && response.error ? response.error.message :
-                                genericErrorText);
-                        }
-
-                        resolve({
-                            default: response.url
-                        });
-                    });
-
-                    if (xhr.upload) {
-                        xhr.upload.addEventListener('progress', evt => {
-                            if (evt.lengthComputable) {
-                                loader.uploadTotal = evt.total;
-                                loader.uploaded = evt.loaded;
-                            }
-                        });
-                    }
-                }
-
-                _sendRequest(file) {
-                    const data = new FormData();
-                    data.append('upload', file);
-                    this.xhr.send(data);
-                }
-            }
-
-            function MyCustomUploadAdapterPlugin(editor) {
-                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-                    return new MyUploadAdapter(loader);
-                };
-            }
-
-            ClassicEditor.create(document.querySelector('#content'), {
-                extraPlugins: [MyCustomUploadAdapterPlugin],
-                toolbar: {
-                    items: [
-                        'heading', '|', 'bold', 'italic', 'link', '|',
-                        'bulletedList', 'numberedList', '|',
-                        'outdent', 'indent', '|', 'blockQuote', 'insertTable', 'imageUpload', '|',
-                        'undo', 'redo'
-                    ]
-                },
-                image: {
-                    resizeOptions: [{
-                            name: 'imageResize:original',
-                            value: null,
-                            label: 'Original'
-                        },
-                        {
-                            name: 'imageResize:50',
-                            value: '50',
-                            label: '50%'
-                        },
-                        {
-                            name: 'imageResize:75',
-                            value: '75',
-                            label: '75%'
-                        }
-                    ],
-                    toolbar: [
-                        'imageStyle:inline',
-                        'imageStyle:block',
-                        'imageStyle:side',
-                        '|',
-                        'toggleImageCaption',
-                        'imageTextAlternative',
-                        '|',
-                        'imageResize'
-                    ]
-                },
-                heading: {
-                    options: [{
-                            model: 'paragraph',
-                            title: 'Paragraph',
-                            class: 'ck-heading_paragraph'
-                        },
-                        {
-                            model: 'heading1',
-                            view: 'h1',
-                            title: 'Heading 1',
-                            class: 'ck-heading_heading1'
-                        },
-                        {
-                            model: 'heading2',
-                            view: 'h2',
-                            title: 'Heading 2',
-                            class: 'ck-heading_heading2'
-                        },
-                        {
-                            model: 'heading3',
-                            view: 'h3',
-                            title: 'Heading 3',
-                            class: 'ck-heading_heading3'
-                        }
-                    ]
-                },
-                table: {
-                    contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
-                },
-                language: 'en'
-            }).then(editor => {
-                editorInstance = editor;
-                editor.model.document.on('change:data', () => {
-                    @this.set('content', editor.getData(), false);
-                });
-            }).catch(console.error);
-        }
-
+        // Modal event listeners
         $(document).ready(function() {
             $('#pageModal').on('shown.bs.modal', function() {
-                setTimeout(initializeCKEditor, 200);
+                createCKEditor();
             });
+
             $('#pageModal').on('hidden.bs.modal', function() {
-                if (editorInstance) {
-                    editorInstance.destroy().then(() => {
-                        editorInstance = null;
-                    });
+                if (ckeditorInstance) {
+                    destroyCKEditor();
                 }
             });
         });
 
+        // Livewire event listeners
         document.addEventListener('livewire:init', () => {
             Livewire.on('editor-content-updated', (event) => {
-                setTimeout(() => {
-                    if (editorInstance) editorInstance.setData(event.content || '');
-                }, 250);
+                // Wait for editor to be initialized
+                const interval = setInterval(() => {
+                    if (ckeditorInstance && ckeditorInstance.status === 'ready') {
+                        ckeditorInstance.setData(event.content || '');
+                        clearInterval(interval);
+                    }
+                }, 100);
             });
 
             Livewire.on('clear-editor', () => {
-                if (editorInstance) editorInstance.setData('');
+                if (ckeditorInstance) {
+                    ckeditorInstance.setData('');
+                }
             });
 
             Livewire.on('file-updated', (event) => {

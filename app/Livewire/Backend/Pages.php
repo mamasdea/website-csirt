@@ -109,7 +109,7 @@ class Pages extends Component
         $data['slug'] = $data['slug'] ? Str::slug($data['slug']) : Str::slug($this->title);
 
         if ($this->image) {
-            $data['image'] = $this->image->store('uploads/pages', 'public');
+            $data['image'] = $this->image->store('uploads/pages', 'gcs');
         }
 
         if ($this->file) {
@@ -166,7 +166,7 @@ class Pages extends Component
             if ($p->image && Storage::disk('public')->exists($p->image)) {
                 Storage::disk('public')->delete($p->image);
             }
-            $data['image'] = $this->image->store('uploads/pages', 'public');
+            $data['image'] = $this->image->store('uploads/pages', 'gcs');
         } else {
             unset($data['image']);
         }
@@ -207,8 +207,8 @@ class Pages extends Component
     {
         $p = ModelPage::find($this->page_id);
         if ($p) {
-            if ($p->image && Storage::disk('public')->exists($p->image)) {
-                Storage::disk('public')->delete($p->image);
+            if ($p->image && Storage::disk('gcs')->exists($p->image)) {
+                Storage::disk('gcs')->delete($p->image);
             }
             if ($p->file && Storage::disk('public')->exists($p->file)) {
                 Storage::disk('public')->delete($p->file);
