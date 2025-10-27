@@ -4,19 +4,20 @@ use App\Livewire\Backend\Menu;
 use App\Livewire\Backend\Pages;
 use App\Livewire\Backend\Article;
 use App\Livewire\Backend\Category;
-use App\Livewire\Backend\FilePanduan;
-use App\Livewire\Backend\SettingWeb; // Import SettingWeb component
 use App\Livewire\Frontend\Beranda;
 use App\Livewire\Backend\Dashboard;
+use App\Livewire\Backend\FilePanduan;
+use App\Livewire\Frontend\Page\Lapor;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Frontend\Page\Detail;
+use App\Http\Controllers\HelperController;
 use App\Livewire\Frontend\Article\GridBerita;
 use App\Livewire\Frontend\Article\GridArticle;
-use App\Livewire\Frontend\Article\DetailArticle;
 use App\Http\Controllers\ImageUploadController;
-use App\Livewire\Frontend\Page\Lapor;
-use App\Livewire\Auth\Login; // Import the Login Livewire component
+use App\Livewire\Frontend\Article\DetailArticle;
 use Illuminate\Support\Facades\Auth; // Import Auth facade
+use App\Livewire\Auth\Login; // Import the Login Livewire component
+use App\Livewire\Backend\SettingWeb; // Import SettingWeb component
 
 /*
 |--------------------------------------------------------------------------
@@ -62,3 +63,5 @@ Route::get('/article-detail/{slug}', DetailArticle::class)->name('articles.show'
 Route::get('/article-grid', GridArticle::class)->name('articles.grid');
 Route::get('/berita-grid', GridBerita::class)->name('berita.grid');
 Route::get('/lapor-insiden', Lapor::class)->name('lapor-insiden');
+
+Route::get('show-picture', [HelperController::class, 'showPicture'])->name('helper.show-picture');
