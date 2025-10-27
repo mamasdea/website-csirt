@@ -22,9 +22,9 @@ class DetailArticle extends Component
     public function mount(string $slug): void
     {
         $this->article = Article::with(['author:id,name', 'category:id,name,slug'])
-            ->where('slug', $slug)
-            ->where('status', 'published')
-            ->firstOrFail();
+        ->where('slug', $slug)
+        ->where('status', 'published')
+        ->firstOrFail();
 
         $this->dispatch('update-title', title: $this->article->title);
         $this->related = new Collection();

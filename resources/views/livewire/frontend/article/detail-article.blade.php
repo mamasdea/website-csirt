@@ -44,7 +44,7 @@
     {{-- Cover (opsional) --}}
     @if ($article->image)
         <div class="mb-6 rounded-xl overflow-hidden">
-            <img src="{{ asset('storage/' . $article->image) }}" alt="{{ $article->title }}"
+            <img src="{{ route('helper.show-picture', ['path' => $article->image]) }}" alt="{{ $article->title }}"
                 class="w-full h-64 md:h-80 object-cover opacity-95">
         </div>
     @endif
@@ -100,7 +100,7 @@
                     <a href="{{ route('articles.show', $r->slug) }}"
                         class="group rounded-xl border border-accent/10 p-4 bg-secondary hover:shadow-md transition duration-300">
                         @if ($r->image)
-                            <img src="{{ asset('storage/' . $r->image) }}" alt="{{ $r->title }}"
+                            <img src="{{ route('helper.show-picture', ['path' => $r->image]) }}" alt="{{ $r->title }}"
                                 class="w-full h-40 object-cover rounded-lg mb-3 group-hover:opacity-100 opacity-90 transition" />
                         @endif
                         <h3 class="font-semibold text-color group-hover:text-accent transition line-clamp-2">

@@ -14,7 +14,7 @@ class Beranda extends Component
     public function mount()
     {
         // Ambil 4 artikel terbaru berdasarkan kolom created_at
-        $this->postingan = Article::latest()->take(4)->get();
+        $this->postingan = Article::where('status', 'published')->latest()->take(4)->get();
     }
 
     public function render()

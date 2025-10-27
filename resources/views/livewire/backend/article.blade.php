@@ -58,7 +58,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     @if ($a->image)
-                                        <img src="{{ asset('storage/' . $a->image) }}" class="rounded mr-2"
+                                        <img src="{{ route('helper.show-picture', ['path' => $a->image]) }}" class="rounded mr-2"
                                             style="width:50px;height:50px;object-fit:cover"
                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-secondary rounded mr-2 d-flex align-items-center justify-content-center\' style=\'width:50px;height:50px;min-width:50px;\'><i class=\'fas fa-image text-white\'></i></div><div><div class=\'font-weight-bold\'>{{ $a->title }}</div><div class=\'text-muted small\'>{{ $a->slug }}</div></div>';">
                                     @else
@@ -202,7 +202,7 @@
                                         style="max-height:120px;width:100%;object-fit:cover;">
                                 @elseif(!empty($current_image))
                                     <label class="d-block text-center">Gambar Saat Ini</label>
-                                    <img src="{{ asset('storage/' . $current_image) }}" class="img-thumbnail"
+                                    <img src="{{ route('helper.show-picture', ['path' => $current_image]) }}" class="img-thumbnail"
                                         style="max-height:120px;width:100%;object-fit:cover;"
                                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E';">
                                 @else

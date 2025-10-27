@@ -105,7 +105,7 @@ class Article extends Component
 
         // upload image (optional)
         if ($this->image) {
-            $data['image'] = $this->image->store('uploads/articles', 'public');
+            $data['image'] = $this->image->store('uploads/articles', 'gcs');
         }
 
         ModelArticle::create($data);
@@ -153,11 +153,11 @@ class Article extends Component
         // Handle image upload
         if ($this->image) {
             // Hapus gambar lama jika ada
-            if ($a->image && Storage::disk('public')->exists($a->image)) {
-                Storage::disk('public')->delete($a->image);
+            if ($a->image && Storage::disk('gcs')->exists($a->image)) {
+                Storage::disk('gcs')->delete($a->image);
             }
             // Upload gambar baru
-            $data['image'] = $this->image->store('uploads/articles', 'public');
+            $data['image'] = $this->image->store('uploads/articles', 'gcs');
         } else {
             // Jika tidak ada upload baru, hapus 'image' dari array $data
             // Agar tidak mengupdate field image di database
@@ -191,8 +191,8 @@ class Article extends Component
     {
         $a = ModelArticle::find($this->article_id);
         if ($a) {
-            if ($a->image && Storage::disk('public')->exists($a->image)) {
-                Storage::disk('public')->delete($a->image);
+            if ($a->image && Storage::disk('gcs')->exists($a->image)) {
+                Storage::disk('gcs')->delete($a->image);
             }
             $a->delete();
         }
