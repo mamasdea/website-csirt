@@ -36,7 +36,7 @@
                 <a href="{{ route('articles.show', $item->slug) }}"
                     class="card-elev bg-secondary rounded-xl border p-4 transition duration-300 hover:shadow-lg block">
                     @if ($item->image)
-                        <img src="{{ asset('storage/' . $item->image) }}" alt="{{ $item->title }}"
+                        <img src="{{ route('helper.show-picture', ['path' => $item->image]) }}" alt="{{ $item->title }}"
                             class="w-full h-40 object-cover rounded-lg mb-4 opacity-80 transition duration-300 group-hover:opacity-100">
                     @endif
 
